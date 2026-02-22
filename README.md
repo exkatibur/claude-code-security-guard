@@ -41,15 +41,37 @@ The agent still gets API access - through **wrapper scripts** that source `.env`
   (LLM sees this, not the keys)
 ```
 
-## Setup (2 minutes)
+## Project Structure
 
-### 1. Copy the hook
+This repo mirrors the standard Claude Code project layout. You can copy the files directly into your project:
 
-```bash
-cp security_guard.py /path/to/your/project/.claude/hooks/
+```
+your-project/
+├── .claude/
+│   ├── hooks/
+│   │   └── security_guard.py   ← the hook
+│   └── settings.json           ← hook registration
+├── scripts/
+│   └── example-api.sh          ← wrapper script template
+├── .env                        ← your secrets (never seen by LLM)
+└── ...
 ```
 
-### 2. Add to your project's `.claude/settings.json`
+## Setup (2 minutes)
+
+### 1. Copy into your project
+
+```bash
+# Copy the hook
+cp .claude/hooks/security_guard.py /path/to/your/project/.claude/hooks/
+
+# Copy the example wrapper (optional)
+cp scripts/example-api.sh /path/to/your/project/scripts/
+```
+
+### 2. Register the hook in `.claude/settings.json`
+
+Merge the `PreToolUse` hook into your existing settings (see `.claude/settings.json` in this repo for the exact format):
 
 ```json
 {
@@ -75,7 +97,7 @@ The hook runs automatically before every tool call. No restart needed.
 
 ## How Wrapper Scripts Work
 
-Instead of letting the agent read `.env` directly, create wrapper scripts:
+Instead of letting the agent read `.env` directly, create wrapper scripts under `scripts/`:
 
 ```bash
 #!/usr/bin/env bash
@@ -93,7 +115,7 @@ esac
 
 The agent calls `./scripts/my-api.sh fetch` and gets JSON back. It never sees `$API_KEY`.
 
-See `example-wrapper.sh` for a complete template.
+See `scripts/example-api.sh` for a complete template.
 
 ## What Happens When Something Is Blocked
 
@@ -114,14 +136,14 @@ All blocks are logged to `~/.claude-security/security-guard.log`:
 This hook is one layer. Combine with:
 
 - **`.claude/settings.json` permissions** - restrict which tools are auto-allowed
-- **Wrapper scripts** - the agent gets data without seeing credentials
+- **`scripts/` wrapper pattern** - the agent gets data without seeing credentials
 - **Audit log** - review what was blocked and when
 
 Even if a prompt injection tells the agent to "read the .env file", the hook blocks it. It runs outside the LLM context - the agent can't bypass it.
 
 ## Customization
 
-**Add your own patterns** to `BASH_BLOCK_PATTERNS`:
+**Add your own patterns** to `BASH_BLOCK_PATTERNS` in `.claude/hooks/security_guard.py`:
 
 ```python
 BASH_BLOCK_PATTERNS = [
