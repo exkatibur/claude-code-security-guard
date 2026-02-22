@@ -1,0 +1,8 @@
+.env
+.env.*
+!.env.example
+!.env.template
+!.env.sample
+__pycache__/
+*.pyc
+LINKEDIN-POST.md
